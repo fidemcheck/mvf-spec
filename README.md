@@ -1,5 +1,7 @@
 # Merchant Verification File (MVF)
 
+[![Fidem MCP connector](https://glama.ai/mcp/connectors/com.fidemcheck/fidem/badges/score.svg)](https://glama.ai/mcp/connectors/com.fidemcheck/fidem)
+
 An open format that lets an online shop prove, in a way any AI agent can check, which company runs it and that the company really controls the domain.
 
 AI agents now browse and buy on people's behalf. Before paying, an agent cannot tell a real shop from a clone by reading the website, because anyone can copy a legal notice. MVF fixes that with a small signed file the shop publishes at:
