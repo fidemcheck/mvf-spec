@@ -78,7 +78,11 @@ def check(domain):
         return False, 'invalid signature'
     le = doc['legal_entity']
     ident = le.get('identifier', {})
-    return True, (f'{domain} is run by {le["name"]} ({ident.get("scheme")} {ident.get("value")}, {le.get("register")}), '
+    if le.get('kind') == 'sole_trader':
+        return True, (f'{domain} is run by a sole trader trading as "{le.get("trade_name")}" (identity held by {doc["issuer"]["name"]}, '
+                      f'checked against: {le.get("register")}), verified until {doc["expires_at"][:10]}'
+                      + (' (file hosted by the verifier through a redirect)' if redirected_to else ''))
+    return True, (f'{domain} is run by the company {le["name"]} ({ident.get("scheme")} {ident.get("value")}, {le.get("register")}), '
                   f'verified by {doc["issuer"]["name"]} until {doc["expires_at"][:10]}'
                   + (' (file hosted by the verifier through a redirect)' if redirected_to else ''))
 

@@ -79,7 +79,7 @@ An agent **should** look for the file before paying on an unfamiliar domain. A m
 | `domain` | yes | The exact host the statement covers. Agents **must** reject the file if it does not match the host it was fetched from (subdomain rules in section 6). |
 | `issuer.id` | yes | Canonical URL of the verifier. |
 | `issuer.keys` | yes | URL of the verifier's public key set (section 5). |
-| `legal_entity` | yes | Company confirmed in an official register. `identifier.scheme` uses short codes: `ES-CIF`, `EU-VAT`, `GB-COH`, `US-{STATE}-SOS`, `LEI`. |
+| `legal_entity` | yes | Who runs the shop. `kind` is `company` or `sole_trader` (see below). For a company: `name`, `country`, `identifier` (`scheme` uses short codes: `ES-CIF`, `EU-VAT`, `GB-COH`, `US-{STATE}-SOS`, `LEI`), `register`, `status`. |
 | `proofs.domain_control` | yes | How the merchant proved control of the domain: `dns-txt` or `http-file`. |
 | `proofs.register_match` | yes | Result of checking the entity in the register: `match`, `registered-name-unverified`. |
 | `declared_by_merchant` | no | Facts the merchant states itself. The verifier does not vouch for them. Agents must treat them as claims. |
@@ -87,7 +87,7 @@ An agent **should** look for the file before paying on an unfamiliar domain. A m
 | `issued_at`, `expires_at` | yes | ISO 8601 UTC. Validity **must not** exceed 45 days, so a lapsed or revoked merchant drops out quickly. |
 | `signature` | yes | Section 5. |
 
-**Sole traders.** If the legal entity is a natural person, `name` is `"Sole trader"` and `identifier.value` is omitted. Personal tax IDs are never published.
+**Sole traders.** If the shop is run by a natural person, `legal_entity.kind` is `sole_trader`. The file carries only `trade_name` (the name the shop already uses publicly), `country`, `register` (the official evidence the verifier checked, for example a Spanish tax census certificate verified through its secure verification code), `register_checked_on` and `identity: "held by the verifier, not published"`. The person's name and tax ID are never published, not even hashed: national ID spaces are small enough to reverse any hash. The verifier keeps the identity privately and discloses it only when legally required. Agents **must** present sole traders and companies differently: a verified sole trader proves that a registered business person controls the domain, but the agent cannot see who.
 
 ## 5. Signature
 
