@@ -1,0 +1,127 @@
+# Merchant Verification File (MVF)
+
+**Version 0.1, draft, 23 November 2026. Proposed by Fidem. Open specification: anyone may implement it or issue verifications under it. Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).**
+
+> Resumen en español: es un archivo pequeño que una tienda online publica en su propia web, en `/.well-known/merchant-verification.json`. Lo firma un verificador independiente (el primero es Fidem) y dice qué empresa ha demostrado ser la dueña de ese dominio, con qué registro oficial se ha comprobado y hasta cuándo vale. Cualquier agente de IA que visite la tienda puede leerlo y comprobar la firma sin conocer al verificador de antes.
+
+## 1. Problem
+
+AI agents increasingly browse the open web and buy on behalf of people. When an agent lands on an unfamiliar online shop it has no reliable, machine-readable way to answer one question: **is the company behind this domain real, and does it actually control this domain?** Copying a real company's legal notice onto a clone shop is trivial, so text on the page alone proves nothing.
+
+MVF lets a shop publish a signed statement, issued by an independent verifier, that binds **a domain** to **a legal entity confirmed in an official register**.
+
+## 2. Scope
+
+MVF states facts, not opinions. It says nothing about product quality, delivery or customer service. It never contains a score.
+
+## 3. Location and discovery
+
+A merchant publishes the file at:
+
+```
+https://{merchant-domain}/.well-known/merchant-verification.json
+```
+
+served with `Content-Type: application/json` over HTTPS. The merchant **should** also add to every page:
+
+```html
+<link rel="merchant-verification" href="/.well-known/merchant-verification.json">
+```
+
+An agent **should** look for the file before paying on an unfamiliar domain. A missing file is not a negative signal by itself.
+
+**Delegated hosting.** Instead of hosting the file, the merchant **may** answer that path with an HTTP redirect (301, 302, 307 or 308) to the copy the verifier keeps for its domain, for example `https://fidemcheck.com/v/{merchant-domain}/merchant-verification.json`. The verifier can then renew the file before it expires without the merchant redeploying anything. Keeping the redirect in place is itself proof that the merchant still controls the domain. Agents **must** follow at most one redirect, and only to the host named in `issuer.id`.
+
+## 4. File format
+
+```json
+{
+  "mvf": "0.1",
+  "domain": "shop.example",
+  "issuer": {
+    "name": "Fidem",
+    "id": "https://fidemcheck.com",
+    "keys": "https://fidemcheck.com/.well-known/mvf-keys.json"
+  },
+  "legal_entity": {
+    "name": "Example Shop Ltd",
+    "country": "GB",
+    "identifier": { "scheme": "GB-COH", "value": "00000000" },
+    "register": "Companies House",
+    "register_url": "https://find-and-update.company-information.service.gov.uk/company/00000000",
+    "status": "active"
+  },
+  "proofs": {
+    "domain_control": { "method": "dns-txt", "checked_at": "2026-11-23T10:00:00Z" },
+    "register_match": { "checked_at": "2026-11-23T10:00:00Z", "result": "match" }
+  },
+  "declared_by_merchant": {
+    "contact": "help@shop.example",
+    "ships_to": ["GB", "IE"],
+    "return_window_days": 30
+  },
+  "verification_url": "https://fidemcheck.com/v/shop.example",
+  "issued_at": "2026-11-23T10:00:00Z",
+  "expires_at": "2026-12-23T10:00:00Z",
+  "signature": {
+    "alg": "Ed25519",
+    "kid": "fidem-2026-11",
+    "value": "base64url signature"
+  }
+}
+```
+
+### Fields
+
+| Field | Required | Meaning |
+|---|---|---|
+| `mvf` | yes | Spec version. |
+| `domain` | yes | The exact host the statement covers. Agents **must** reject the file if it does not match the host it was fetched from (subdomain rules in section 6). |
+| `issuer.id` | yes | Canonical URL of the verifier. |
+| `issuer.keys` | yes | URL of the verifier's public key set (section 5). |
+| `legal_entity` | yes | Company confirmed in an official register. `identifier.scheme` uses short codes: `ES-CIF`, `EU-VAT`, `GB-COH`, `US-{STATE}-SOS`, `LEI`. |
+| `proofs.domain_control` | yes | How the merchant proved control of the domain: `dns-txt` or `http-file`. |
+| `proofs.register_match` | yes | Result of checking the entity in the register: `match`, `registered-name-unverified`. |
+| `declared_by_merchant` | no | Facts the merchant states itself. The verifier does not vouch for them. Agents must treat them as claims. |
+| `verification_url` | yes | Live page and JSON endpoint where the verifier confirms the statement is still valid. |
+| `issued_at`, `expires_at` | yes | ISO 8601 UTC. Validity **must not** exceed 45 days, so a lapsed or revoked merchant drops out quickly. |
+| `signature` | yes | Section 5. |
+
+**Sole traders.** If the legal entity is a natural person, `name` is `"Sole trader"` and `identifier.value` is omitted. Personal tax IDs are never published.
+
+## 5. Signature
+
+1. Remove the `signature` member.
+2. Serialise the rest as canonical JSON: UTF-8, keys sorted lexicographically at every level, no insignificant whitespace (RFC 8785 JCS).
+3. Sign the bytes with Ed25519. Put the base64url signature, without padding, in `signature.value`, with the key id in `signature.kid`.
+
+The verifier publishes its public keys at `issuer.keys`:
+
+```json
+{ "keys": [ { "kid": "fidem-2026-11", "alg": "Ed25519", "x": "base64url public key", "not_after": "2027-11-23" } ] }
+```
+
+## 6. How an agent checks a file
+
+1. Fetch `/.well-known/merchant-verification.json` from the shop's host over HTTPS. If the answer is a redirect, follow it once and only if it points to the host in the file's `issuer.id` (delegated hosting, section 3).
+2. Check that `domain` equals the host, or is its registrable parent when the host is `www.` of it.
+3. Check that `expires_at` has not passed.
+4. Fetch `issuer.keys`, which agents may cache for 24 hours. Find `kid` and verify the signature.
+5. Optional but recommended for payments: call `verification_url` (or the verifier's API or MCP tool) to confirm the statement has not been revoked.
+6. Decide using the facts. MVF says who the company is and that it controls the domain. It does not say whether to buy.
+
+If any step fails, the agent **must** treat the shop as unverified, not as fraudulent.
+
+## 7. Revocation
+
+The verifier marks revoked statements at `verification_url`, which returns `{"status":"revoked"}`. The short validity (45 days at most) limits the damage when an agent does not check online.
+
+## 8. Without a file: public lookup
+
+Verifiers **should** offer a free lookup for any domain, based only on public sources (registry, domain age, certificates), clearly labelled as *not merchant-verified*. Fidem's lookup is the `consultar_tienda` tool on its MCP server and API. This lets agents get value from day one, before many merchants publish files.
+
+## 9. Open questions for v0.2
+
+- A shared registry of verifiers (who may issue MVF).
+- How to align with Visa Trusted Agent Protocol, Web Bot Auth and the agentic commerce protocols (ACP, AP2, UCP).
+- More national registers (US states, Latin America).
