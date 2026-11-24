@@ -82,6 +82,7 @@ An agent **should** look for the file before paying on an unfamiliar domain. A m
 | `legal_entity` | yes | Who runs the shop. `kind` is `company` or `sole_trader` (see below). For a company: `name`, `country`, `identifier` (`scheme` uses short codes: `ES-CIF`, `EU-VAT`, `GB-COH`, `US-{STATE}-SOS`, `LEI`), `register`, `status`. |
 | `proofs.domain_control` | yes | How the merchant proved control of the domain: `dns-txt` or `http-file`. |
 | `proofs.register_match` | yes | Result of checking the entity in the register: `match`, `registered-name-unverified`. |
+| `proofs.representation` | yes for `kind: company` | How the requester proved they represent the company, not only that the company exists: `representative-certificate` (a document signed with the company's qualified representative certificate or eIDAS seal, whose identifier matches the entity) or `payee-verified-transfer` (a code sent by bank transfer to an account in the company's name, with the payee name confirmed by the bank). Without it, a fraudster could control their own domain and copy a real company's identifier. |
 | `declared_by_merchant` | no | Facts the merchant states itself. The verifier does not vouch for them. Agents must treat them as claims. |
 | `verification_url` | yes | Live page and JSON endpoint where the verifier confirms the statement is still valid. |
 | `issued_at`, `expires_at` | yes | ISO 8601 UTC. Validity **must not** exceed 45 days, so a lapsed or revoked merchant drops out quickly. |
@@ -118,7 +119,7 @@ The verifier marks revoked statements at `verification_url`, which returns `{"st
 
 ## 8. Without a file: public lookup
 
-Verifiers **should** offer a free lookup for any domain, based only on public sources (registry, domain age, certificates), clearly labelled as *not merchant-verified*. Fidem's lookup is the `consultar_tienda` tool on its MCP server and API. This lets agents get value from day one, before many merchants publish files.
+Verifiers **should** offer a free lookup for any domain, based only on public sources (registry, domain age, certificates), clearly labelled as *not merchant-verified*. Fidem's lookup is the `check_shop` tool on its MCP server and `GET /api/v1/shop?domain=` on its API, with English field names. The original names, `consultar_tienda` and `GET /api/v1/tienda?dominio=`, keep working with Spanish field names. This lets agents get value from day one, before many merchants publish files.
 
 ## 9. Open questions for v0.2
 
