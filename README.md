@@ -10,7 +10,7 @@ AI agents now browse and buy on people's behalf. Before paying, an agent cannot 
 https://{shop-domain}/.well-known/merchant-verification.json
 ```
 
-An independent verifier signs it (Ed25519) after checking two things: that the shop controls the domain, and that its company matches an official register. Any agent can verify the signature with the verifier's public keys, without calling the verifier.
+An independent verifier signs it (Ed25519) after checking that the shop controls the domain, that its company matches an official register and, for companies, that the person asking represents the company. Any agent can verify the signature without calling the verifier, using the keys of the verifiers it chooses to trust. A valid signature from an issuer you do not trust proves nothing, so the checker takes the issuer keys from your trust policy, never from the file. Revoked verifications are listed in each issuer's signed revocation list (`/.well-known/mvf-revocations.json`).
 
 - **Specification:** [SPEC.md](SPEC.md) (version 0.1, draft)
 - **Reference checker:** [verify_mvf.py](verify_mvf.py)
@@ -25,6 +25,13 @@ python verify_mvf.py shop.example
 ```
 
 Output is either `VERIFIED: shop.example is run by ...` or `NOT VERIFIED: <reason>`. A shop that is not verified is not a fraudulent shop. It only means it has not proved it.
+
+The checker trusts Fidem by default (`TRUSTED_ISSUERS` at the top of the file). To add another issuer, or for payments where an unavailable revocation list must count as not verified:
+
+```
+python verify_mvf.py shop.example --trust https://issuer.example=https://issuer.example/.well-known/mvf-keys.json
+python verify_mvf.py shop.example --strict-revocation
+```
 
 ## What a file looks like
 

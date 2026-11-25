@@ -93,7 +93,7 @@ An agent **should** look for the file before paying on an unfamiliar domain. A m
 ## 5. Signature
 
 1. Remove the `signature` member.
-2. Serialise the rest as canonical JSON: UTF-8, keys sorted lexicographically at every level, no insignificant whitespace (RFC 8785 JCS).
+2. Serialise the rest with the JSON Canonicalization Scheme, RFC 8785 (JCS): UTF-8, keys sorted by UTF-16 code units at every level, no insignificant whitespace, ECMAScript number formatting. MVF files only use strings, integers, booleans and null, so any JCS library gives the same bytes. The reference checker includes a JCS implementation.
 3. Sign the bytes with Ed25519. Put the base64url signature, without padding, in `signature.value`, with the key id in `signature.kid`.
 
 The verifier publishes its public keys at `issuer.keys`:
@@ -104,18 +104,35 @@ The verifier publishes its public keys at `issuer.keys`:
 
 ## 6. How an agent checks a file
 
+A valid signature is not, by itself, an accredited identity: anyone can sign a file with their own key. Agents **must** keep their own **trust policy**, a list of issuers they accept and, for each one, the URL of its keys. The keys are fetched from that policy, never from `issuer.keys` in the file being checked.
+
 1. Fetch `/.well-known/merchant-verification.json` from the shop's host over HTTPS. If the answer is a redirect, follow it once and only if it points to the host in the file's `issuer.id` (delegated hosting, section 3).
-2. Check that `domain` equals the host, or is its registrable parent when the host is `www.` of it.
-3. Check that `expires_at` has not passed.
-4. Fetch `issuer.keys`, which agents may cache for 24 hours. Find `kid` and verify the signature.
-5. Optional but recommended for payments: call `verification_url` (or the verifier's API or MCP tool) to confirm the statement has not been revoked.
-6. Decide using the facts. MVF says who the company is and that it controls the domain. It does not say whether to buy.
+2. Check that `issuer.id` is in your trust policy. If it is not, the shop is unverified.
+3. Check that `domain` equals the host, or is its registrable parent when the host is `www.` of it.
+4. Check that `expires_at` has not passed.
+5. Fetch the issuer's keys from your trust policy (agents may cache them for 24 hours). Find `kid` and verify the signature.
+6. If the file has `demo.fictitious: true`, it is an issuer's example: it **must never** count as verified for a payment.
+7. A file with `legal_entity.kind` `company` issued on or after 2027-01-01 **must** carry `proofs.representation`. Earlier files may lack it during the transition, and checkers should report that as a warning.
+8. Check the issuer's signed revocation list (section 7). For payments, an unavailable or stale list should count as "not verified".
+9. Decide using the facts. MVF says who the company is and that it controls the domain. It does not say whether to buy.
+
+`verify_mvf.py` in this repository implements these steps. Fidem's API and MCP tool apply the same decision and return it in the field `decision` (`verified` is the only value that means an accredited identity).
 
 If any step fails, the agent **must** treat the shop as unverified, not as fraudulent.
 
 ## 7. Revocation
 
-The verifier marks revoked statements at `verification_url`, which returns `{"status":"revoked"}`. The short validity (45 days at most) limits the damage when an agent does not check online.
+A revoked shop that hosts its own file keeps a valid signature until the file expires. To close that gap for agents that check without calling the verifier's API, the issuer **must** publish a signed revocation list at `/.well-known/mvf-revocations.json` on its `issuer.id` host:
+
+```json
+{ "mvf_revocations": "0.1", "issuer": "https://fidemcheck.com", "issued_at": "2026-11-25T14:00:00Z",
+  "next_update": "2026-12-03T14:00:00Z", "revoked": [ { "domain": "shop.example", "revoked_at": "2026-11-20T10:00:00Z" } ],
+  "signature": { "alg": "Ed25519", "kid": "fidem-2026-12", "value": "base64url" } }
+```
+
+It is signed like a file (section 5), with the issuer's keys. It is valid until `next_update`, at most 8 days after `issued_at`: the issuer signs it again at every revocation and at least weekly. A domain in the list is revoked whatever its file says. The reason is not published.
+
+The verifier also marks revoked statements at `verification_url`, which returns `{"status":"revoked"}`. The short validity of files (45 days at most) limits the damage further.
 
 ## 8. Without a file: public lookup
 
