@@ -1,0 +1,46 @@
+{
+ "mvf": "0.1",
+ "domain": "tienda-demo.fidemcheck.com",
+ "issuer": {
+  "name": "Fidem",
+  "id": "https://fidemcheck.com",
+  "keys": "https://fidemcheck.com/.well-known/mvf-keys.json"
+ },
+ "legal_entity": {
+  "kind": "company",
+  "name": "Tostadero Demo, S.L. (ejemplo ficticio)",
+  "country": "ES",
+  "identifier": {
+   "scheme": "ES-CIF",
+   "value": "B00000000"
+  },
+  "register": "Ninguno: empresa ficticia de demostración de Fidem",
+  "status": "fictitious"
+ },
+ "proofs": {
+  "domain_control": {
+   "method": "issuer-operated",
+   "checked_at": "2026-11-26T09:10:33Z"
+  },
+  "register_match": {
+   "checked_at": "2026-11-26T09:10:33Z",
+   "result": "not-applicable-fictitious"
+  },
+  "representation": {
+   "method": "issuer-operated-demo",
+   "checked_at": "2026-11-26T09:10:33Z"
+  }
+ },
+ "demo": {
+  "fictitious": true,
+  "note": "Fictitious shop run by Fidem on its own subdomain to demonstrate MVF. Not a real company; it sells nothing."
+ },
+ "verification_url": "https://fidemcheck.com/v/tienda-demo.fidemcheck.com",
+ "issued_at": "2026-11-26T09:10:33Z",
+ "expires_at": "2026-12-26T09:10:33Z",
+ "signature": {
+  "alg": "Ed25519",
+  "kid": "fidem-2026-12",
+  "value": "X20jG3-GZm70yHdfm9XeaaH1ohFcz8w5zmhTTpQbcIJkPiCzL7QcY6Yg8NGNjW-C_IKo518fs-sTRNBj6csFDg"
+ }
+}

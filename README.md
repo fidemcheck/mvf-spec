@@ -14,7 +14,7 @@ An independent verifier signs it (Ed25519) after checking that the shop controls
 
 - **Specification:** [SPEC.md](SPEC.md) (version 0.1, draft)
 - **Reference checker:** [verify_mvf.py](verify_mvf.py)
-- **Live example:** `python verify_mvf.py tienda-demo.fidemcheck.com`
+- **Live example:** `python verify_mvf.py tienda-demo.fidemcheck.com` (a fictitious shop that Fidem runs on its own subdomain; the checker says so and never treats it as verified)
 - **First verifier:** [Fidem](https://fidemcheck.com), which also offers a free lookup for any shop through a remote MCP server (`https://fidemcheck.com/mcp`) and an [OpenAPI-described API](https://fidemcheck.com/openapi.json)
 
 ## Check a shop in one line
@@ -35,7 +35,7 @@ python verify_mvf.py shop.example --strict-revocation
 
 ## What a file looks like
 
-See [examples/tienda-demo.fidemcheck.com.json](examples/tienda-demo.fidemcheck.com.json), a real file signed on 26 November 2026, and the issuer key set in [examples/fidem-keys.json](examples/fidem-keys.json). Files expire after 30 days and are renewed by the verifier, so the example will show as expired after its date; run the checker against the live domain instead.
+See [examples/tienda-demo.fidemcheck.com.json](examples/tienda-demo.fidemcheck.com.json), the signed file of Fidem's fictitious demo shop, and the issuer key set in [examples/fidem-keys.json](examples/fidem-keys.json). Files expire after 30 days and are renewed by the verifier, so the example will show as expired after its date; run the checker against the live domain instead.
 
 ## Design choices
 
