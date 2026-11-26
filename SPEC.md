@@ -138,7 +138,17 @@ The verifier also marks revoked statements at `verification_url`, which returns 
 
 Verifiers **should** offer a free lookup for any domain, based only on public sources (registry, domain age, certificates), clearly labelled as *not merchant-verified*. Fidem's lookup is the `check_shop` tool on its MCP server and `GET /api/v1/shop?domain=` on its API, with English field names. The original names, `consultar_tienda` and `GET /api/v1/tienda?dominio=`, keep working with Spanish field names. This lets agents get value from day one, before many merchants publish files.
 
-## 9. Open questions for v0.2
+## 9. Compatibility with the IETF MIA draft
+
+Since 25 November 2026, Fidem also issues every company verification in the format of the IETF draft *Merchant Identity Assertions* (draft-anders-merchant-identity-assertions-01), with the same data and dates as the MVF file. MIA is not an alternative to MVF: it is the same signed fact in the format the draft defines, so agents that only read MIA find it too.
+
+- **Where.** `https://{domain}/.well-known/merchant-identity.json`, served by the shop itself. MIA does not allow redirects, so the WordPress and PrestaShop plugins keep a copy and serve it directly. The same assertion is always available at `https://fidemcheck.com/v/{domain}/merchant-identity.json` (add `?subject=www.{domain}` for the www host: the `subject` must match the exact host).
+- **Keys.** The same Ed25519 keys as `mvf-keys.json`, published as a JWKS at `https://fidemcheck.com/.well-known/jwks.json`.
+- **Third-party issuer.** Fidem is a third-party issuer. The shop authorizes it with a Merchant Identity Delegation Document at `/.well-known/mia-delegation.json`, signed with a key that the plugin creates on the shop's own site (`/.well-known/mia-keys.json`), or with a DNS record `_mia-auth.{domain}` with the value `v=mia1; issuer=fidemcheck.com`.
+- **Revocation.** `revocationUri` points to `https://fidemcheck.com/v/{domain}/revocation.json`.
+- **Sole traders.** MIA would publish the person's name as `legalName`, so Fidem only issues MIA for companies. Sole traders keep their MVF file, which never publishes their name.
+
+## 10. Open questions for v0.2
 
 - A shared registry of verifiers (who may issue MVF).
 - How to align with Visa Trusted Agent Protocol, Web Bot Auth and the agentic commerce protocols (ACP, AP2, UCP).
