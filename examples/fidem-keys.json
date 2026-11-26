@@ -1,10 +1,10 @@
 {
  "keys": [
   {
-   "kid": "fidem-2026-11",
+   "kid": "fidem-2026-12",
    "alg": "Ed25519",
-   "x": "1cbgXzX9V2x2POEErum69gJyAwyGzigytqx4TiFzfYY",
-   "not_after": "2027-11-23"
+   "x": "at0R-8G-7ggM3-gRkuZbHgIKSv20nCL6JMOn8UdnhpY",
+   "not_after": "2027-12-31"
   }
  ]
 }

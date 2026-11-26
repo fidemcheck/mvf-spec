@@ -65,7 +65,7 @@ An agent **should** look for the file before paying on an unfamiliar domain. A m
   "expires_at": "2026-12-23T10:00:00Z",
   "signature": {
     "alg": "Ed25519",
-    "kid": "fidem-2026-11",
+    "kid": "fidem-2026-12",
     "value": "base64url signature"
   }
 }
@@ -99,7 +99,7 @@ An agent **should** look for the file before paying on an unfamiliar domain. A m
 The verifier publishes its public keys at `issuer.keys`:
 
 ```json
-{ "keys": [ { "kid": "fidem-2026-11", "alg": "Ed25519", "x": "base64url public key", "not_after": "2027-11-23" } ] }
+{ "keys": [ { "kid": "fidem-2026-12", "alg": "Ed25519", "x": "base64url public key", "not_after": "2027-11-23" } ] }
 ```
 
 ## 6. How an agent checks a file

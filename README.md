@@ -35,7 +35,7 @@ python verify_mvf.py shop.example --strict-revocation
 
 ## What a file looks like
 
-See [examples/tienda-demo.fidemcheck.com.json](examples/tienda-demo.fidemcheck.com.json), a real file signed on 23 November 2026, and the issuer key set in [examples/fidem-keys.json](examples/fidem-keys.json). Files expire after 30 days and are renewed by the verifier, so the example will show as expired after its date; run the checker against the live domain instead.
+See [examples/tienda-demo.fidemcheck.com.json](examples/tienda-demo.fidemcheck.com.json), a real file signed on 26 November 2026, and the issuer key set in [examples/fidem-keys.json](examples/fidem-keys.json). Files expire after 30 days and are renewed by the verifier, so the example will show as expired after its date; run the checker against the live domain instead.
 
 ## Design choices
 
